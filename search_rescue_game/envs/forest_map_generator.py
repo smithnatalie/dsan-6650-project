@@ -1,5 +1,5 @@
 import os
-from envs.forest_view import Maps
+from search_rescue_game.envs.forest_view import Maps
 
 if __name__ == "__main__":
     

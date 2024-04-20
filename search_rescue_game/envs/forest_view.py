@@ -18,7 +18,7 @@ class ForestViews:
         
         #loading the forest map view
         if map_file_path is None:
-            self.__view = Map(map_size=map_size, has_loops=has_loops, num_portals=num_portals)
+            self.__view = Maps(map_size=map_size, has_loops=has_loops, num_portals=num_portals)
         else:
             if not os.path.exists(map_file_path):
                 dir_path = os.path.dirname(os.path.abspath(__file__))
