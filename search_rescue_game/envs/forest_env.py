@@ -153,11 +153,11 @@ class RandomForestMap10x10(MapEnv):
 #     def __init__(self, enable_render=True):
 #         super(MazeEnvRandom100x100, self).__init__(maze_size=(100, 100), enable_render=enable_render)
 
+#Plus for q learning
+class RandomForestMap10x10Plus(MapEnv):
 
-# class MazeEnvRandom10x10Plus(MazeEnv):
-
-#     def __init__(self, enable_render=True):
-#         super(MazeEnvRandom10x10Plus, self).__init__(maze_size=(10, 10), mode="plus", enable_render=enable_render)
+    def __init__(self, enable_render=True):
+        super(RandomForestMap10x10Plus, self).__init__(map_size=(10, 10), mode="plus", enable_render=enable_render)
 
 
 # class MazeEnvRandom20x20Plus(MazeEnv):
