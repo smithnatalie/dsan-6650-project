@@ -6,7 +6,8 @@ from forest_view import Maps
 if __name__ == "__main__":
     
     #check that map_options exists in cwd
-    dir_name = os.path.join(os.getcwd(), "map_options")
+    map_folder_path = './search_rescue_game/envs'
+    dir_name = os.path.join(map_folder_path, "map_options")
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
