@@ -301,7 +301,7 @@ class Maps:
             self.map_size = map_size
             
             #random map gen function
-            self._generate_map()
+            self.generate_map()
             
     def save_map(self, file_path):
         if not isinstance(file_path, str):
@@ -321,7 +321,7 @@ class Maps:
         else:
             return np.load(file_path, fix_imports=True)
         
-    def _generate_map(self):
+    def generate_map(self):
             self.map_cells = np.zeros(self.map_size, dtype=int)
             
             #intializing cell attributes and map structures
