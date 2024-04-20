@@ -3,7 +3,7 @@ import numpy as np
 import gymnasium
 from gymnasium import error, spaces, utils
 from gymnasium.utils import seeding
-from search_rescue_game.envs.forest_view import ForestViews
+from forest_view import ForestViews
 
 
 class MapEnv(gymnasium.Env):

@@ -1,10 +1,14 @@
 import os
-from search_rescue_game.envs.forest_view import Maps
+# from search_rescue_game.envs.forest_view import Maps
+from forest_view import Maps
+
 
 if __name__ == "__main__":
     
     #check that map_options exists in cwd
     dir_name = os.path.join(os.getcwd(), "map_options")
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
 
     #may remove or change option
     #create new map by incrementing to play unique map state games - starting with 100 possible map options
