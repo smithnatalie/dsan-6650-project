@@ -18,20 +18,20 @@ class ForestViews:
         
         #loading the forest map view
         if map_file_path is None:
-            self.__view = Maps(map_size=map_size, has_loops=has_loops, num_portals=num_portals)
+            self.__maps = Maps(map_size=map_size, has_loops=has_loops, num_portals=num_portals)
         else:
             if not os.path.exists(map_file_path):
                 dir_path = os.path.dirname(os.path.abspath(__file__))
-                rel_path = os.path.join(dir_path, "forest_maps", map_file_path)
+                rel_path = os.path.join(dir_path, "map_options", map_file_path)
                 #for error capturing if file not found:
                 if os.path.exists(rel_path):
                     map_file_path = rel_path
                 else:
                     raise FileExistsError("Unable to locate map %s." % map_file_path)
                 #MAY NEED TO FIX THIS
-            self.__view = maps(map_cells=maps.load_map(map_file_path))
+            self.__maps = Maps(map_cells=Maps.load_map(map_file_path))
             
-        self.map_size = self.__view.map_size
+        self.map_size = self.__maps.map_size
         if self.__enable_render is True:
             #showing bottom right area
             self.screen = pygame.display.set_mode(screen_size)
@@ -64,211 +64,211 @@ class ForestViews:
             self.__draw_goal()
             
             #game status updates
-            def update(self, mode="human"):
-                try:
-                    img_output = self.__view_update(mode)
-                    self.__controller_update()
-                except Exception as e:
+    def update(self, mode="human"):
+        try:
+            img_output = self.__view_update(mode)
+            self.__controller_update()
+        except Exception as e:
+            self.__game_over = True
+            self.quit_game()
+            raise e
+        else: 
+            return img_output
+                
+    #quit functionality
+    def quit_game(self):
+        try:
+            self.__game_over = True
+            if self.__enable_render is True:
+                pygame.display.quit()
+            pygame.quit()
+        except Exception:
+            pass    
+            
+    def move_dog(self, dir):
+        if dir not in self.__maps.COMPASS.keys():
+            raise ValueError("%s is not a valid directory. The only valid directories are %s."
+                            % (str(dir), str(self.__maps.COMPASS.keys())))
+                
+        if self.__maps.is_open(self.__dog, dir):
+            #update look
+            self.__draw_dog(transarency=0)
+            #move dog around
+            self.__dog += np.array(self.__maps.COMPASS[dir])
+                #if dog located on any of the "portal" spots
+            if self.maps.is_portal(self.dog):
+                self.__dog = np.array(self.maps.get_portal(tuple(self.dog)).teleport(tuple(self.robot)))
+            self.__draw_dog(transparency = 255)
+                    
+    def reset_dog(self):
+        self.__draw_dog(transparency = 0)
+        self.__dog = np.zeros(2, dtype=int)
+        self.__draw_dog(transparency = 255)
+                
+    def __controller_update(self):
+        if not self.__game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     self.__game_over = True
                     self.quit_game()
-                    raise e
-                else: 
-                    return img_output
-                
-            #quit functionality
-            def quit_game(self):
-                try:
-                    self.__game_over = True
-                    if self.__enable_render is True:
-                        pygame.display.quit()
-                    pygame.quit()
-                except Exception:
-                    pass    
-            
-            def move_dog(self, dir):
-                if dir not in self.__maps.COMPASS.keys():
-                    raise ValueError("%s is not a valid directory. The only valid directories are %s."
-                                     % (str(dir), str(self.__maps.COMPASS.keys())))
-                
-                if self.__maps.is_open(self.__dog, dir):
-                    #update look
-                    self.__draw_dog(transarency=0)
-                    #move dog around
-                    self.__dog += np.array(self.__maps.COMPASS[dir])
-                    #if dog located on any of the "portal" spots
-                    if self.maps.is_portal(self.dog):
-                        self.__dog = np.array(self.maps.get_portal(tuple(self.dog)).teleport(tuple(self.robot)))
-                    self.__draw_dog(transparency = 255)
-                    
-            def reset_dog(self):
-                self.__draw_dog(transparency = 0)
-                self.__dog = np.zeros(2, dtype=int)
-                self.__draw_dog(transparency = 255)
-                
-            def __controller_update(self):
-                if not self.__game_over:
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            self.__game_over = True
-                            self.quit_game()
                             
-            def __view_update(self, mode="human"):
-                if not self.__game_over:
-                    #map and dog location updates
-                    self.__draw_beginning()
-                    self.__draw_goal()
-                    self.__draw_dog()
-                    self.__draw_portals()
+    def __view_update(self, mode="human"):
+        if not self.__game_over:
+            #map and dog location updates
+            self.__draw_beginning()
+            self.__draw_goal()
+            self.__draw_dog()
+            self.__draw_portals()
                     
                     
-                    #updating on screen
-                    self.screen.blit(self.background, (0,0))
-                    self.screen.blit(self.forest_layer, (0,0))
+            #updating on screen
+            self.screen.blit(self.background, (0,0))
+            self.screen.blit(self.forest_layer, (0,0))
                     
-                    if mode == "human":
-                        pygame.display.flip()
+            if mode == "human":
+                pygame.display.flip()
                     
-                    #rotate for easier viewing and 3d to 2d surface
-                    #source: https://www.pygame.org/docs/ref/surfarray.html
-                    return np.flipup(np.rot90(pygame.surfarray.array3d(pygame.display.get_surface())))
+            #rotate for easier viewing and 3d to 2d surface
+            #source: https://www.pygame.org/docs/ref/surfarray.html
+            return np.flipup(np.rot90(pygame.surfarray.array3d(pygame.display.get_surface())))
 
             
-            def __draw_map(self):
+    def __draw_map(self):
                 
-                if self.__enable_render is False:
-                    return
+        if self.__enable_render is False:
+            return
                 
-                #line configs
-                #color
-                line_color = (0,0,0,255)
-                #horizontal lines
-                for y in range(self.maps.MAP_H + 1):
-                    pygame.draw.line(self.forest_layer, line_color, (0, y * self.CELL_H),
+        #line configs
+        #color
+        line_color = (0,0,0,255)
+        #horizontal lines
+        for y in range(self.maps.MAP_H + 1):
+            pygame.draw.line(self.forest_layer, line_color, (0, y * self.CELL_H),
                                      (self.SCREEN_W, y * self.CELL_H))
-                #vertical lines
-                for x in range(self.maps.MAP_W + 1):
-                    pygame.draw.line(self.forest_layer, line_color, (x * self.CELL_W, 0),
+        #vertical lines
+        for x in range(self.maps.MAP_W + 1):
+            pygame.draw.line(self.forest_layer, line_color, (x * self.CELL_W, 0),
                                      (x * self.CELL_W, self.SCREEN_H))
-            #walls and wall status
-                for x in range(len(self.maps.map_cells)):
-                    for y in range(len(self.maps.map_cells[x])):
-                        wall_status = self.maps.get_wall_status(self.maps.map_cells[x,y])
-                        dirs = ""
-                        for dir, open in wall_status.items():
-                            if open:
-                                dirs += dir
-                        self.__cover_walls(x, y, dirs)
+        #walls and wall status
+        for x in range(len(self.maps.map_cells)):
+            for y in range(len(self.maps.map_cells[x])):
+                wall_status = self.maps.get_wall_status(self.maps.map_cells[x,y])
+                dirs = ""
+                for dir, open in wall_status.items():
+                    if open:
+                        dirs += dir
+                self.__cover_walls(x, y, dirs)
             
-            def __cover_walls(self, x, y, dirs, color=(0,0,255,15)):
-                if self.__enable_render is False:
-                    return  
+    def __cover_walls(self, x, y, dirs, color=(0,0,255,15)):
+        if self.__enable_render is False:
+            return  
                 
-                dx = x * self.CELL_W
-                dy = y * self.CELL_H
+        dx = x * self.CELL_W
+        dy = y * self.CELL_H
                 
-                if not isinstance(dirs,str):
-                    raise TypeError("Directory must be of type str")   
+        if not isinstance(dirs,str):
+            raise TypeError("Directory must be of type str")   
                 
-                #cardinal directions and line shape
-                for dir in dirs:
-                    if dir == "S":
-                        line_head = (dx + 1, dy + self.CELL_H)
-                        line_tail = (dx + self.CELL_W - 1, dy + self.CELL_H)
-                    elif dir == "N":
-                        line_head = (dx + 1, dy)
-                        line_tail = (dx + self.CELL_W - 1, dy)
-                    elif dir == "W":
-                        line_head = (dx, dy + 1)
-                        line_tail = (dx, dy + self.CELL_H - 1)
-                    elif dir == "E":
-                        line_head = (dx + self.CELL_W, dy + 1)
-                        line_tail = (dx + self.CELL_W, dy + self.CELL_H - 1)
-                    else:
-                        raise ValueError("Directions must be: (N, S, E, or W).")
+        #cardinal directions and line shape
+        for dir in dirs:
+            if dir == "S":
+                line_head = (dx + 1, dy + self.CELL_H)
+                line_tail = (dx + self.CELL_W - 1, dy + self.CELL_H)
+            elif dir == "N":
+                line_head = (dx + 1, dy)
+                line_tail = (dx + self.CELL_W - 1, dy)
+            elif dir == "W":
+                line_head = (dx, dy + 1)
+                line_tail = (dx, dy + self.CELL_H - 1)
+            elif dir == "E":
+                line_head = (dx + self.CELL_W, dy + 1)
+                line_tail = (dx + self.CELL_W, dy + self.CELL_H - 1)
+            else:
+                raise ValueError("Directions must be: (N, S, E, or W).")
                     
-                    pygame.draw.lines(self.forest_layer, color, line_head, line_tail)
+            pygame.draw.lines(self.forest_layer, color, line_head, line_tail)
             
-            def __draw_dog(self, color=(0,0,150), transparency=255):
-                if self.__enable_render is False:
-                    return
-                x = int(self.__dog[0] * self.CELL_W + self.CELL_W * 0.5 + 0.5)
-                y = int(self.__dog[1] * self.CELL_H + self.CELL_H * 0.5 + 0.5)
-                r = int(min(self.CELL_W, self.CELL_H)/5 + 0.5)
+    def __draw_dog(self, color=(0,0,150), transparency=255):
+        if self.__enable_render is False:
+            return
+        x = int(self.__dog[0] * self.CELL_W + self.CELL_W * 0.5 + 0.5)
+        y = int(self.__dog[1] * self.CELL_H + self.CELL_H * 0.5 + 0.5)
+        r = int(min(self.CELL_W, self.CELL_H)/5 + 0.5)
                 
-                pygame.draw.circle(self.forest_layer, color + (transparency,), (x,y), r)
+        pygame.draw.circle(self.forest_layer, color + (transparency,), (x,y), r)
                 
-            def __draw_beginning(self, color=(0, 0, 150), transparency=235):
-                self.__color_cell(self.beginning, color=color, transparency=transparency)
+    def __draw_beginning(self, color=(0, 0, 150), transparency=235):
+        self.__color_cell(self.beginning, color=color, transparency=transparency)
 
-            def __draw_goal(self, color=(150, 0, 0), transparency=235):
-                self.__color_cell(self.goal, color=color, transparency=transparency)
+    def __draw_goal(self, color=(150, 0, 0), transparency=235):
+        self.__color_cell(self.goal, color=color, transparency=transparency)
 
-            def __draw_portals(self, transparency=160):
-                if self.__enable_render is False:
-                    return 
-                color_range = np.linspace(0, 255, len(self.maps.portals), dtype=int)
-                color_i = 0
-                for portal in self.maps.portals:
-                    color = ((100 - color_range[color_i])% 255, color_range[color_i], 0)
-                    color_i += 1
-                    for location in portal.locations:
-                        self.__color_cell(location, color=color, transparency=transparency)
+    def __draw_portals(self, transparency=160):
+        if self.__enable_render is False:
+            return 
+        color_range = np.linspace(0, 255, len(self.maps.portals), dtype=int)
+        color_i = 0
+        for portal in self.maps.portals:
+            color = ((100 - color_range[color_i])% 255, color_range[color_i], 0)
+            color_i += 1
+            for location in portal.locations:
+                self.__color_cell(location, color=color, transparency=transparency)
                         
-            def __color_cell(self, cell, color, transparency):
-                if self.__enable_render is False:
-                    return
+    def __color_cell(self, cell, color, transparency):
+        if self.__enable_render is False:
+            return
 
-                if not (isinstance(cell, (list, tuple, np.ndarray)) and len(cell) == 2):
-                    raise TypeError("Cell must a be a size 2 tuple, list, or numpy array")
+        if not (isinstance(cell, (list, tuple, np.ndarray)) and len(cell) == 2):
+            raise TypeError("Cell must a be a size 2 tuple, list, or numpy array")
 
-                x = int(cell[0] * self.CELL_W + 0.5 + 1)
-                y = int(cell[1] * self.CELL_H + 0.5 + 1)
-                w = int(self.CELL_W + 0.5 - 1)
-                h = int(self.CELL_H + 0.5 - 1)
-                pygame.draw.rect(self.forest_layer, color + (transparency,), (x, y, w, h))
+        x = int(cell[0] * self.CELL_W + 0.5 + 1)
+        y = int(cell[1] * self.CELL_H + 0.5 + 1)
+        w = int(self.CELL_W + 0.5 - 1)
+        h = int(self.CELL_H + 0.5 - 1)
+        pygame.draw.rect(self.forest_layer, color + (transparency,), (x, y, w, h))
                 
                 
-            #using decorators to access properties using @property
+    #using decorators to access properties using @property
             
-            @property
-            def maps(self):
-                return self.__map
+    @property
+    def maps(self):
+        return self.__maps
             
-            @property
-            def dog(self):
-                return self.__dog
+    @property
+    def dog(self):
+        return self.__dog
             
-            @property
-            def beginning(self):
-                return self.__beginning
+    @property
+    def beginning(self):
+        return self.__beginning
             
-            @property
-            def goal(self):
-                return self.__goal
+    @property
+    def goal(self):
+        return self.__goal
             
-            @property
-            def game_over(self):
-                return self.__game_over
+    @property
+    def game_over(self):
+        return self.__game_over
             
-            @property
-            def SCREEN_SIZE(self):
-                return tuple(self.__screen_size)
+    @property
+    def SCREEN_SIZE(self):
+        return tuple(self.__screen_size)
             
-            @property
-            def SCREEN_W(self):
-                return int(self.SCREEN_SIZE[0])
+    @property
+    def SCREEN_W(self):
+        return int(self.SCREEN_SIZE[0])
 
-            @property
-            def SCREEN_H(self):
-                return int(self.SCREEN_SIZE[1])
+    @property
+    def SCREEN_H(self):
+        return int(self.SCREEN_SIZE[1])
 
-            @property
-            def CELL_W(self):
-                return float(self.SCREEN_W) / float(self.maps.MAP_W)
+    @property
+    def CELL_W(self):
+        return float(self.SCREEN_W) / float(self.maps.MAP_W)
 
-            @property
-            def CELL_H(self):
-                return float(self.SCREEN_H) / float(self.maps.MAP_H)
+    @property
+    def CELL_H(self):
+        return float(self.SCREEN_H) / float(self.maps.MAP_H)
 
 class Maps:
     #cardinal directions
@@ -301,7 +301,7 @@ class Maps:
             self.map_size = map_size
             
             #random map gen function
-            self.__generate_map()
+            self._generate_map()
             
     def save_map(self, file_path):
         if not isinstance(file_path, str):
@@ -321,7 +321,7 @@ class Maps:
         else:
             return np.load(file_path, fix_imports=True)
         
-    def generate_map(self):
+    def _generate_map(self):
             self.map_cells = np.zeros(self.map_size, dtype=int)
             
             #intializing cell attributes and map structures
@@ -340,8 +340,8 @@ class Maps:
                     x1 = x0 + dir_val[0]
                     y1 = y0 + dir_val[1]
                     
-                    if 0 <- x1 < self.MAP_W and 0 <= y1 < self.MAP_H:
-                        if self.walls_exist(self.map_cells[x1,y1]):
+                    if 0 <= x1 < self.MAP_W and 0 <= y1 < self.MAP_H:
+                        if self.all_walls_intact(self.map_cells[x1,y1]):
                             neighbors[dir_key] = (x1, y1)
                             
                 if neighbors:
@@ -367,12 +367,12 @@ class Maps:
                 
     def __remove_random_walls(self, percent):
         num_cells = int(round(self.MAP_H*self.MAP_W*percent))
-        cell_ids = random.sample(range(self.MAP_H*self.MAP_H), num_cells)
+        cell_ids = random.sample(range(self.MAP_W*self.MAP_H), num_cells)
         
         #each wall
         for cell_id in cell_ids:
-            x = cell_id % self.MAZE_H
-            y = int(cell_id/self.MAZE_H)
+            x = cell_id % self.MAP_H
+            y = int(cell_id/self.MAP_H)
             
         #random direction
         dirs = random.sample(list(self.COMPASS.keys()), len(self.COMPASS))

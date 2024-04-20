@@ -18,5 +18,5 @@ if __name__ == "__main__":
             raise ValueError("Total number of possible maps in directory (100) exceeded.")
         
     maps = Maps(map_size=(10,10))
-    map.save_map(map_path)
+    maps.save_map(map_path)
     print("A new map has been generated. It is located at %s." % map_path)

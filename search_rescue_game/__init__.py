@@ -5,13 +5,13 @@ from gymnasium.envs.registration import register
 
 register(
     id='forest-map-10x10-v0',
-    entry_point='gym_maze.envs:ForestMap10x10',
+    entry_point='search_rescue_game.envs:ForestMap10x10',
     max_episode_steps=10000,#may change steps
 )
 
 register(
     id='random-forest-map-10x10-v0',
-    entry_point='gym_maze.envs:RandomForestMap10x10',
+    entry_point='search_rescue_game.envs:RandomForestMap10x10',
     max_episode_steps=10000,
     nondeterministic=True,
 )
@@ -19,7 +19,7 @@ register(
 
 register(
     id='random-forest-map-plus-10x10-v0',
-    entry_point='gym_maze.envs:RandomForestMap10x10Plus',
+    entry_point='search_rescue_game.envs:RandomForestMap10x10Plus',
     max_episode_steps=1000000,
     nondeterministic=True,
 )
