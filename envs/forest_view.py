@@ -512,3 +512,33 @@ class Maps:
             opposite_dirs += opposite_dir
 
         return opposite_dirs
+
+#POSSIBLE REMOVE - LIKELY WILL NOT KEEP PORTALS   
+class Portal:
+    
+    def __init__(self, *locations):
+
+        self.__locations = []
+        for location in locations:
+            if isinstance(location, (tuple, list)):
+                self.__locations.append(tuple(location))
+            else:
+                raise ValueError("Portal location must be of type tuple or list.")
+
+    def teleport(self, cell):
+        if cell in self.locations:
+            return self.locations[(self.locations.index(cell) + 1) % len(self.locations)]
+        return cell
+
+    def get_index(self, cell):
+        return self.locations.index(cell)
+
+    @property
+    def locations(self):
+        return self.__locations
+    
+    
+if __name__ == "__main__":
+    maps = ForestViews(screen_size = (600, 600), map_size=(10,10))
+    maps.update()
+    input("Press any key to quit game.")
