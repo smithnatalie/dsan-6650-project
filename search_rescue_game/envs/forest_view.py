@@ -46,7 +46,13 @@ class ForestViews:
         self.__goal = np.array(self.map_size) - np.array([1,1])
         
         #creating agent dog
-        self.__dog = self.beginning
+        # self.__dog = self.beginning
+        self.__dog = np.zeros(2, dtype=int)
+        
+        #debugging statements
+        if not isinstance(self.__dog, np.ndarray) or self.__dog.ndim != 1:
+            raise ValueError(f"Dog position must be a 1D numpy array, got {type(self.__dog)} with shape {self.__dog.shape}")
+        #
         
         #creating rendered map view
         if self.__enable_render is True:
@@ -89,23 +95,25 @@ class ForestViews:
             
     def move_dog(self, dir):
         if dir not in self.__maps.COMPASS.keys():
-            raise ValueError("%s is not a valid directory. The only valid directories are %s."
-                            % (str(dir), str(self.__maps.COMPASS.keys())))
+            raise ValueError(f"{dir} is not a valid direction. Valid directions are {list(self.__maps.COMPASS.keys())}.")
                 
         if self.__maps.is_open(self.__dog, dir):
             #update look
-            self.__draw_dog(transarency=0)
-            #move dog around
+            self.__draw_dog(transparency=0)
+            #moving dog
             self.__dog += np.array(self.__maps.COMPASS[dir])
-                #if dog located on any of the "portal" spots
+            #if dog located on any of the "portal" spots
             if self.maps.is_portal(self.dog):
-                self.__dog = np.array(self.maps.get_portal(tuple(self.dog)).teleport(tuple(self.robot)))
+                self.__dog = np.array(self.maps.get_portal(tuple(self.dog)).teleport(tuple(self.__dog)))
             self.__draw_dog(transparency = 255)
+        if not isinstance(self.__dog, np.ndarray) or self.__dog.ndim != 1:
+            raise ValueError(f"Dog position must be a 1D numpy array after moving, got {type(self.__dog)} with shape {self.__dog.shape}")
                     
     def reset_dog(self):
         self.__draw_dog(transparency = 0)
         self.__dog = np.zeros(2, dtype=int)
         self.__draw_dog(transparency = 255)
+        print("dog is reset to:", self.__dog)
                 
     def __controller_update(self):
         if not self.__game_over:
@@ -132,7 +140,7 @@ class ForestViews:
                     
             #rotate for easier viewing and 3d to 2d surface
             #source: https://www.pygame.org/docs/ref/surfarray.html
-            return np.flipup(np.rot90(pygame.surfarray.array3d(pygame.display.get_surface())))
+            return np.flipud(np.rot90(pygame.surfarray.array3d(pygame.display.get_surface())))
 
             
     def __draw_map(self):

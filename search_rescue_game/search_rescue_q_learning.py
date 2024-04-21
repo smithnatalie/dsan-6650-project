@@ -11,7 +11,7 @@ from search_rescue_game import envs
 
 #source : https://gymnasium.farama.org/main/introduction/record_agent/
 
-def main(ENABLE_RECORDING):
+def main(ENABLE_RECORDING, NUM_EPISODES, MAX_T):
     env = gymnasium.make("random-forest-map-plus-10x10-v0", render_mode='rgb_array')
     video_folder = './game_recordings'
     
@@ -60,16 +60,76 @@ def simulate(env, num_episodes, q_table, state_bounds, num_buckets):
             if done or env.is_game_over():
                 break
             
-            
+# def state_to_bucket(state, state_bounds, num_buckets):
+#     if any(x is None for x in state):
+#         raise ValueError(f"Invalid state received: {state}")
+    
+#     if not isinstance(state, np.ndarray) or state.ndim != 1:
+#         raise ValueError(f"State must be a 1D numpy array, got {type(state)} with shape {state.shape}")
+    
+#     bucket_indice = []
+    
+#     for i in range(len(state)):
+#         bound_width = state_bounds[i][1] - state_bounds[i][0]
+#         offset = (num_buckets[i]-1) * state_bounds[i][0] / bound_width
+#         scaling = (num_buckets[i]-1) / bound_width
+        
+#         #calculate result
+#         result = scaling * state[i] - offset
+#         bucket_index = int(np.round(result))
+#         bucket_indice.append(bucket_index)
+        
+#     return tuple(bucket_indice)
+
 def state_to_bucket(state, state_bounds, num_buckets):
-    bucket_indice = []
+    try:
+        # Convert state to a numpy array of type int, ensure it's flat
+        if not isinstance(state, np.ndarray) or state.ndim != 1:
+            state = np.array(state, dtype=int).flatten()
+    except Exception as e:
+        raise ValueError(f"Failed to convert state to a proper numpy array: {e}")
+
+    bucket_indices = []
     for i in range(len(state)):
         bound_width = state_bounds[i][1] - state_bounds[i][0]
         offset = (num_buckets[i]-1) * state_bounds[i][0] / bound_width
         scaling = (num_buckets[i]-1) / bound_width
-        bucket_index = int(round(scaling * state[i] - offset))
-        bucket_indice.append(bucket_index)
-    return tuple(bucket_indice)
+        bucket_index = int(np.round(scaling * state[i] - offset))
+        bucket_indices.append(bucket_index)
+
+    return tuple(bucket_indices)
+
+
+
+
+           
+# def state_to_bucket(state, state_bounds, num_buckets):
+#     if any(x is None for x in state):
+#         raise ValueError(f"Invalid state received: {state}")
+#     if isinstance(state, np.ndarray) and state.ndim > 1:
+#         raise ValueError(f"state array should be 1-d, received shape: {state.shape}")
+#     bucket_indice = []
+#     for i in range(len(state)):
+#         bound_width = state_bounds[i][1] - state_bounds[i][0]
+#         offset = (num_buckets[i]-1) * state_bounds[i][0] / bound_width
+#         scaling = (num_buckets[i]-1) / bound_width
+        
+#         #debug info
+#         print(f"processing state[{i}]: {state[i]}, scaling: {scaling}, offset: {offset}")
+        
+#         #used chatgpt to assist with fixing bucket index - was totally lost here
+#         # bucket_index = int(round(scaling * state[i] - offset))
+#         result = scaling * state[i] - offset
+#         if isinstance(result, np.ndarray) and result.size == 1:
+#             bucket_index = int(np.round(result).item())
+#         elif isinstance(result, (float, np.floating)):
+#             bucket_index = int(round(result))
+#         else:
+#             raise ValueError(f"result is not a scalar: result={result}, type={type(result)}")    
+#         #bucket_index = int(np.round(scaling * state[i] - offset).item())
+
+#         bucket_indice.append(bucket_index)
+#     return tuple(bucket_indice)
 
 
 def get_explore_rate(t, decay_factor, min_explore_rate):
@@ -91,7 +151,7 @@ if __name__ == "__main__":
     MAX_T = 1000
     env = None
     try:
-        env = main(ENABLE_RECORDING)
+        env = main(ENABLE_RECORDING, NUM_EPISODES, MAX_T)
 
     finally:
         if env is not None:
