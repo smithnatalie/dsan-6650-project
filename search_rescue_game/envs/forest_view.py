@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 from typing import Tuple
-from search_rescue_game.envs.forest_map import Maps, Cell
+from .forest_map import Maps, Cell
 
 
 #TESTING~>~>~>~>~>~>~>>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~

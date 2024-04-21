@@ -68,7 +68,7 @@ class Maps:
     # https://medium.com/@nacerkroudir/randomized-depth-first-search-algorithm-for-maze-generation-fb2d83702742
         # not exactly the same but used cell stack code outlined in article
     def generate_map(self):
-        current_cell: 'Cell' = self.cell_at(0, 0)
+        current_cell: 'Cell' = self.current_cell_object(0, 0)
         cell_stack: List['Cell'] = [current_cell]
 
         while cell_stack:

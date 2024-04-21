@@ -1,14 +1,24 @@
 #q learning off policy - more than one policy, and model free
 #TESTING~>~>~>~>~>~>~>>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~
 
+import gymnasium
+from . import envs
 import numpy as np
 import math
 import random
 from typing import Tuple
+import sys
 
-import gymnasium
+
 from gymnasium.wrappers import RecordVideo, RecordEpisodeStatistics
-import envs
+
+
+sys.path.append('/Users/smithnatalie/Desktop/dsan-6650-project')
+
+#debugging
+# print("Registered environments:", [spec.id for spec in gymnasium.envs.registry.values()])
+
+###
 
 #folder where we defined classes, map rendering, etc. 
 
@@ -28,7 +38,7 @@ def calc_exploration_rate(t: int) -> float:
 if __name__ == "__main__":
     #create environment - this map will change depending on which want to select
     #start with a random generation
-    env = gymnasium.make("map-random-10x10-v0")
+    env = gymnasium.make("map-random-10x10-v0", render_mode = "human")
     
     #screen recording
     recording_enabled = False
@@ -62,25 +72,43 @@ if __name__ == "__main__":
     for episode in range(num_episodes):
         total_reward: int = 0
         #reset
-        observation = env.reset()
+        #debugging
+        # observation = env.reset()
+        observation, info = env.reset()
         
-        current_state: Tuple[int,int] = tuple(observation)
+        #debugging
+        # current_state = tuple(current_state[0])
+        # current_state: Tuple[int,int] = tuple(observation)
+        current_state = tuple(observation)
         
         #rendering after observation
-        env.render(mode="human")
+        # env.render(mode="human")
+        
         
         # how the dog agent will select the action to take next
         
         for episode_step in range(num_episode_steps):
             #random action based on exploration rate
             if random.uniform(0,1) < exploration_rate:
-                action: int = env.action_space.sample()
+                # action: int = env.action_space.sample()
+                action = int(env.action_space.sample())
             else:
                 #otherwise, take a past action that was determined to yield best results (argmax)
-                action: int = int(np.argmax(Q[current_state]))
+                # action: int = int(np.argmax(Q[current_state]))
+                action = int(np.argmax(Q[current_state]))
+                
+                
+            #DEBUGGING
+            # print("Current state", current_state)
+            # print("q table shape", Q.shape)
             
             #going back to what was defined in forest_env for step function
-            #should require 5 inputs    
+            #should require 5 inputs
+            
+            #debugging
+            print(f"Attempting to execute action: {action}, Type: {type(action)}")
+
+            
             observation, reward, terminated, truncated, _ = env.step(action)
             
             total_reward += reward
@@ -98,13 +126,13 @@ if __name__ == "__main__":
             current_state = next_state
             
             #render again after env moves into next state
-            env.render(mode="human")
+            # env.render(mode="human")
             
-            #end of game - terminated = true
+            #end of game - reaches goal - terminated = true
             if terminated:
                 print("Episode %d/%d complete after %d steps. Total reward = %f." % (episode + 1, num_episodes, episode_step + 1, total_reward))
                 break
-            #if issue arises/timeout
+            #if reach max steps without goal
             elif episode_step >= num_episode_steps - 1:
                 print("Episode %d/%d timed out after %d steps. Total reward = %f."
                       % (episode + 1, num_episodes, episode_step + 1, total_reward))
