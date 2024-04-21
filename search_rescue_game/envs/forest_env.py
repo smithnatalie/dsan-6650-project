@@ -15,12 +15,11 @@ class MapEnv(gymnasium.Env):
     ACTION = ["N", "S", "E", "W"]
 
     def __init__(self, map_file=None, map_size=None, mode=None, enable_render=True, render_mode=None):
-        #super(MapEnv, self).__init__()
-        super(RandomForestMap10x10Plus, self).__init__()
+        super(MapEnv, self).__init__()
         self.viewer = None
         self.enable_render = enable_render
         self.render_mode = render_mode
-        self.seed = None
+        # self.seed = None
 
         if map_file:
             self.map_view = ForestViews(map_name=f"Search and Rescue - Map ({map_file})",
@@ -79,28 +78,36 @@ class MapEnv(gymnasium.Env):
         self.display = display
 
     #REWARDS and steps
+    #source for assistance with termination + truncation stuff (most resources had old gym documentation)
+    # https://stackoverflow.com/questions/77042526/how-to-record-and-save-video-of-gym-environment
+    
     def step(self, action):
         self.map_view.move_dog(self.ACTION[action])
 
         if np.array_equal(self.map_view.dog, self.map_view.goal):
             reward = 1
-            done = True
+            # done = True
+            terminated = True
+            truncated = False
         else:
             reward = -0.1 / (self.map_size[0] * self.map_size[1])
-            done = False
+            # done = False
+            terminated = True
+            truncated = False
 
         self.state = np.array(self.map_view.dog, dtype=np.int64)
         
-        print("State after action:", self.state)
-        print("Type of state:", type(self.state))
-        print("Shape of state:", self.state.shape)
+        #debugging statements
+        # print("State after action:", self.state)
+        # print("Type of state:", type(self.state))
+        # print("Shape of state:", self.state.shape)
         
         info = {}
-        return self.state, reward, done, info
+        return self.state, reward, terminated, truncated, info
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    def seed(self, seed_value=None):
+        self.np_random, seed_value = seeding.np_random(seed_value)
+        return [seed_value]
 
     # def step(self, action):
     #     if isinstance(action, int):
@@ -134,7 +141,8 @@ class MapEnv(gymnasium.Env):
     
 
     #def reset(self, seed=None, options=None):
-    def reset(self):
+    def reset(self, **kwargs):#seed = None):
+        seed = kwargs.get('seed', None)
         self.np_random, seed = seeding.np_random(seed)
         #want 1D array
         self.state = np.array([0,0], dtype=int)#np.zeros(2, dtype=np.int64)
@@ -155,23 +163,36 @@ class MapEnv(gymnasium.Env):
     
 #map classes
     
-class ForestMap10x10(MapEnv):
-    def __init__(self, render_mode='rgb_array'):
-    # def __init__(self, enable_render=True):
+# class ForestMap10x10(MapEnv):
+#     def __init__(self, render_mode='rgb_array'):
+#     # def __init__(self, enable_render=True):
         
-        super(ForestMap10x10, self).__init__(map_file="forestmap_10x10.npy", enable_render=enable_render)
+#         super(ForestMap10x10, self).__init__(map_file="forestmap_10x10.npy", enable_render=enable_render)
 
-class RandomForestMap10x10(MapEnv):
-    def __init__(self, render_mode='rgb_array'):
-    # def __init__(self, enable_render=True):
-        super(RandomForestMap10x10, self).__init__(map_size=(10, 10), enable_render=enable_render)
+# class RandomForestMap10x10(MapEnv):
+#     def __init__(self, render_mode='rgb_array'):
+#     # def __init__(self, enable_render=True):
+#         super(RandomForestMap10x10, self).__init__(map_size=(10, 10), enable_render=enable_render)
 
 #THIS IS THE ONE I AM USING
 
 class RandomForestMap10x10Plus(MapEnv):
-    def __init__(self, enable_render = True, render_mode='rgb_array'):
+    def __init__(self, enable_render=True, render_mode='rgb_array'):
         super(RandomForestMap10x10Plus, self).__init__(map_size=(10, 10), mode="plus", enable_render=enable_render, render_mode=render_mode)
-        # super().__init__(map_size=(10, 10), mode="plus", enable_render=True, render_mode=render_mode)
+
+
+
+
+# class RandomForestMap10x10Plus(MapEnv):
+#     def __init__(self, enable_render = True, render_mode='rgb_array'):
+#         super(RandomForestMap10x10Plus, self).__init__(map_size=(10, 10), mode="plus", enable_render=enable_render, render_mode=render_mode)
+    
+    
+    
+    
+    
+    
+     # super().__init__(map_size=(10, 10), mode="plus", enable_render=True, render_mode=render_mode)
 # map configurations - GO THRU AND REMOVE LATER!
 # class MazeEnvSample5x5(MazeEnv):
 

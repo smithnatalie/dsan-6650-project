@@ -113,7 +113,6 @@ class ForestViews:
         self.__draw_dog(transparency = 0)
         self.__dog = np.zeros(2, dtype=int)
         self.__draw_dog(transparency = 255)
-        print("dog is reset to:", self.__dog)
                 
     def __controller_update(self):
         if not self.__game_over:
