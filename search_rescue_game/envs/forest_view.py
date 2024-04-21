@@ -53,6 +53,10 @@ class ForestViews:
             #scale to fit cell
         self.__dog_icon = pygame.transform.scale(self.__dog_icon, (self.__cell_width, self.__cell_height))
         
+        #goal (baby) icon
+        self.__goal_icon = pygame.image.load('./search_rescue_game/envs/images/baby.png')
+        self.__goal_icon = pygame.transform.scale(self.__goal_icon, (self.__cell_width, self.__cell_height))
+        
         #drawing the objects so they show up - will define below
         self.__draw_map()
         self.__beginning_color()
@@ -118,13 +122,20 @@ class ForestViews:
         pygame.draw.rect(self.__game_surface, color, (x0, y0, w0, h0))
         
     #may change color in accordance with game design     
-    def __beginning_color(self, color: Tuple[int, int, int, int] = (0, 0, 255, 150)):
+    def __beginning_color(self, color: Tuple[int, int, int, int] = (0, 0, 0, 0)):
         self.__color_cell(self.beginning[0], self.beginning[1], color)
         
     
     #will likely change to icon to signify area for rescue
-    def __goal_color(self, color: Tuple[int, int, int, int] = (255, 0, 0, 150)):
-        self.__color_cell(self.goal[0], self.goal[1], color)
+    # def __goal_color(self, color: Tuple[int, int, int, int] = (255, 0, 0, 150)):
+    #     self.__color_cell(self.goal[0], self.goal[1], color)
+    
+    def __goal_color(self):
+        x0 = self.goal[0] * self.cell_width + (self.cell_width - self.__goal_icon.get_width()) // 2
+        y0 = self.goal[1] * self.cell_height + (self.cell_height - self.__goal_icon.get_height()) // 2
+
+        self.__game_surface.blit(self.__goal_icon, (x0, y0))
+    
     
     #will change to dog icon - currently just colored circle for testing purposes
     def __dog_color(self):
@@ -200,6 +211,7 @@ class ForestViews:
         #back to starting position
         self.__dog = np.zeros(2, dtype=int)
         self.__dog_color()
+        self.__goal_color()
         
     
     @property
