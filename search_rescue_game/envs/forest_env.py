@@ -145,8 +145,8 @@ class MapEnv10x10(MapEnv):
 #test to debug gymnasium documentation quirks 
 
 class RandomMapEnv10x10(MapEnv):
-    def __init__(sel, screen_size=(600,600), map_size=(10,10), map_file_path=None, render_mode=None):
-        super().__init__(screen_size=screen_size, map_size=map_size, map_file_path=map_file_path)
+    def __init__(self, screen_size=(600,600), map_size=(10,10), map_file_path=None, render_mode=None):
+        super().__init__(screen_size=screen_size, map_size=map_size, map_file_path=map_file_path, render_mode=render_mode)
 
 #25 x 25 Maps
 
