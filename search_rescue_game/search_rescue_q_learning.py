@@ -8,7 +8,9 @@ from typing import Tuple
 
 import gymnasium
 from gymnasium.wrappers import RecordVideo, RecordEpisodeStatistics
-import envs #folder where we defined classes, map rendering, etc. 
+import envs
+
+#folder where we defined classes, map rendering, etc. 
 
 #searchable learning rate and options:
 #sources for using the max + decay with the log10 
@@ -96,7 +98,7 @@ if __name__ == "__main__":
             current_state = next_state
             
             #render again after env moves into next state
-            env.render(mode="human"):
+            env.render(mode="human")
             
             #end of game - terminated = true
             if terminated:

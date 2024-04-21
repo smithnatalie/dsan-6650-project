@@ -41,7 +41,7 @@ class Maps:
         self.cells: List[List['Cell']] = [[Cell(x, y) for y in range(self.ny)] for x in range(self.nx)]
         
         if map_file_path:
-            self.load(map_file_path)
+            self.load_map(map_file_path)
         else:
             #generating map if none at the path - may remove this if map generation is too complicated
             self.generate_map()

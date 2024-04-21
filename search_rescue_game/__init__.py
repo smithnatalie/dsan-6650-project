@@ -6,7 +6,6 @@ from gymnasium.envs.registration import register
 
 register(
     id='map-10x10-v0',
-    # entry_point='gym_maze.envs.maze_env:MazeEnvSample10x10',
     entry_point='search_rescue_game.envs.forest_env:MapEnv10x10',
     max_episode_steps=10000,
 )

@@ -15,7 +15,7 @@ MAPS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "map_option
 
 
 class MapEnv(gymnasium.Env):
-    metadata = {"render.modes": ["human", "rgb_array"]}
+    metadata = {"render_modes": ["human", "rgb_array"]}
     
     actions: List[str] = ["N", "S", "W", "E"]
     
@@ -26,13 +26,15 @@ class MapEnv(gymnasium.Env):
         self.map_size: Tuple[int, int] = map_size
         
         #map view for env
-        self.map_view: ForestViews = ForestViews(custom_map="Search and Rescue - Map (%d x %d)" % map_size,
+        self.map_view: ForestViews = ForestViews(caption="Search and Rescue - Map (%d x %d)" % map_size,
                                                  screen_size = screen_size, map_size=map_size,
                                                  map_file_path = map_file_path)
         
         
+        
         #action space
-        self.action_space: spaces.Discrete(2 * len(self.map_size))
+        self.action_space: spaces = spaces.Discrete(2 * len(self.map_size))
+    
         
         #obsv space 
         low: np.ndarray = np.zeros(len(self.map_size), dtype=int)
@@ -92,14 +94,14 @@ class MapEnv(gymnasium.Env):
 class MapEnv10x10(MapEnv):
 
     def __init__(self):
-        super(MapEnv10x10, self).__init__(screen_size=(600, 600), maze_size=(10, 10),
+        super(MapEnv10x10, self).__init__(screen_size=(600, 600), map_size=(10, 10),
                                                  map_file_path=os.path.join(MAPS_DIR, "mapenv_10x10.npy"))
 
 
 class RandomMapEnv10x10(MapEnv):
 
     def __init__(self):
-        super(RandomMapEnv10x10, self).__init__(screen_size=(600, 600), maze_size=(10, 10),
+        super(RandomMapEnv10x10, self).__init__(screen_size=(600, 600), map_size=(10, 10),
                                                  map_file_path=None)
 
 #25 x 25 Maps
@@ -107,14 +109,14 @@ class RandomMapEnv10x10(MapEnv):
 class MapEnv25x25(MapEnv):
 
     def __init__(self):
-        super(MapEnv25x25, self).__init__(screen_size=(600, 600), maze_size=(25, 25),
+        super(MapEnv25x25, self).__init__(screen_size=(600, 600), map_size=(25, 25),
                                                  map_file_path=os.path.join(MAPS_DIR, "mapenv_25x25.npy"))
 
 
 class RandomMapEnv25x25(MapEnv):
 
     def __init__(self):
-        super(RandomMapEnv25x25, self).__init__(screen_size=(600, 600), maze_size=(25, 25),
+        super(RandomMapEnv25x25, self).__init__(screen_size=(600, 600), map_size=(25, 25),
                                                  map_file_path=None)
 
     
