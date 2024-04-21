@@ -13,7 +13,7 @@ register(
 register(
     id='map-random-10x10-v0',
     entry_point='search_rescue_game.envs.forest_env:RandomMapEnv10x10',
-    max_episode_steps=10000
+    max_episode_steps=10000,
 )
 
 register(

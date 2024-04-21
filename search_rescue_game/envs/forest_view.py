@@ -2,6 +2,7 @@ import numpy as np
 import pygame
 from typing import Tuple
 from .forest_map import Maps, Cell
+from pygame.locals import *
 
 
 #TESTING~>~>~>~>~>~>~>>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~
@@ -47,6 +48,11 @@ class ForestViews:
         self.__map: Maps = Maps(map_size=map_size, map_file_path=map_file_path)
     
 
+        #dog icon
+        self.__dog_icon = pygame.image.load('./search_rescue_game/envs/images/bloodhound.png')
+            #scale to fit cell
+        self.__dog_icon = pygame.transform.scale(self.__dog_icon, (self.__cell_width, self.__cell_height))
+        
         #drawing the objects so they show up - will define below
         self.__draw_map()
         self.__beginning_color()
@@ -121,13 +127,22 @@ class ForestViews:
         self.__color_cell(self.goal[0], self.goal[1], color)
     
     #will change to dog icon - currently just colored circle for testing purposes
-    def __dog_color(self, color: Tuple[int,int,int] = (0,0,0), transparency: int = 255):
-        x0: int = self.dog[0] * self.cell_width + self.cell_width // 2
-        y0: int = self.dog[1] * self.cell_height + self.cell_height // 2
-        r0: int = min(self.cell_width, self.cell_height) // 5
+    def __dog_color(self):
+        #top left to center icon
+        x0 = self.dog[0] * self.cell_width + (self.cell_width - self.__dog_icon.get_width()) // 2
+        y0 = self.dog[1] * self.cell_height + (self.cell_height - self.__dog_icon.get_height()) // 2
+
+        self.__game_surface.blit(self.__dog_icon, (x0, y0))
+        
+    #def __dog_color(self, color: Tuple[int,int,int] = (0,0,0), transparency: int = 255):
+        # x0: int = self.dog[0] * self.cell_width + self.cell_width // 2
+        # y0: int = self.dog[1] * self.cell_height + self.cell_height // 2
+        # r0: int = min(self.cell_width, self.cell_height) // 5
+
+        # self.__game_surface.blit(self.__dog_icon, (x0,y0))
 
         #this is the line that will change to include icon instead (most likely)
-        pygame.draw.circle(self.__game_surface, color + (transparency,), (x0, y0), r0)
+        #pygame.draw.circle(self.__game_surface, color + (transparency,), (x0, y0), r0)
  
     
 # decorators, processes, rendering
@@ -162,7 +177,13 @@ class ForestViews:
         current_cell: Cell = self.__map.cells[self.dog[0]][self.dog[1]]
 
         if not current_cell.walls[direction]:
-            self.__dog_color(transparency=0)
+            #self.__dog_color(transparency=0)
+            #fixing dog icon trail - want to disappear once moved
+            x0 = self.dog[0] * self.cell_width
+            y0 = self.dog[1] * self.cell_height
+            self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
+            
+            #move
             self.__dog = self.dog + Maps.compass[direction]
 
         self.__dog_color()
@@ -170,8 +191,15 @@ class ForestViews:
     
     #this is how dog willl be placed back at starting space and game restarted
     def reset_game(self):
-        self.__dog_color(transparency=0) #make invisible
+        x0 = self.dog[0] * self.cell_width
+        y0 = self.dog[1] * self.cell_height
+        self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
+        
+        
+        # self.__dog_color(transparency=0) #make invisible
+        #back to starting position
         self.__dog = np.zeros(2, dtype=int)
+        self.__dog_color()
         
     
     @property
