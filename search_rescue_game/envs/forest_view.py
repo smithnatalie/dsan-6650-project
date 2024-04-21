@@ -5,13 +5,13 @@ import random
 
 class ForestViews:
     #starting w 10x10
-    def __init__(self, view_name = "ForestView", map_file_path=None,
+    def __init__(self, map_name = "ForestView", map_file_path=None,
                  map_size=(10, 10), screen_size=(600,600),
                  has_loops=False, num_portals=0, enable_render=True):
         
         #pygame configs
         pygame.init()
-        pygame.display.set_caption(view_name)
+        pygame.display.set_caption(map_name)
         self.clock = pygame.time.Clock()
         self.__game_over = False
         self.__enable_render = enable_render
@@ -41,7 +41,9 @@ class ForestViews:
         self.__beginning = np.zeros(2, dtype=int)
         
         #end goal- rescue spot - can change
-        self.__goal = np.array(self.map_size) - np.array(1,1)
+        # self.__goal = np.array(self.map_size) - np.array(1,1)
+        
+        self.__goal = np.array(self.map_size) - np.array([1,1])
         
         #creating agent dog
         self.__dog = self.beginning
@@ -186,7 +188,8 @@ class ForestViews:
             else:
                 raise ValueError("Directions must be: (N, S, E, or W).")
                     
-            pygame.draw.lines(self.forest_layer, color, line_head, line_tail)
+            # pygame.draw.lines(self.forest_layer, color, line_head, line_tail)
+            pygame.draw.lines(self.forest_layer, color, False, [line_head, line_tail])
             
     def __draw_dog(self, color=(0,0,150), transparency=255):
         if self.__enable_render is False:

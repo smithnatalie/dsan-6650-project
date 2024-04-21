@@ -4,188 +4,279 @@ import math
 import random
 
 import gymnasium
-import envs
+from gymnasium.wrappers import RecordVideo, RecordEpisodeStatistics
 
 
-def simulate():
+from search_rescue_game import envs
 
-    # Instantiating the learning related parameters
-    learning_rate = get_learning_rate(0)
-    explore_rate = get_explore_rate(0)
-    discount_factor = 0.99
+#source : https://gymnasium.farama.org/main/introduction/record_agent/
 
-    num_streaks = 0
+def main(ENABLE_RECORDING):
+    env = gymnasium.make("random-forest-map-plus-10x10-v0", render_mode='rgb_array')
+    video_folder = './game_recordings'
+    
+    if ENABLE_RECORDING:
+        env = RecordVideo(env, video_folder=video_folder, episode_trigger=lambda x: True, name_prefix="random-forest-map-plus")
 
-    # Render tha maze
-    env.render()
+    # Initialize constants and Q-table
+    MAP_SIZE = tuple((env.observation_space.high + np.ones(env.observation_space.shape)).astype(int))
+    NUM_BUCKETS = MAP_SIZE
+    NUM_ACTIONS = env.action_space.n
+    STATE_BOUNDS = list(zip(env.observation_space.low, env.observation_space.high))
 
-    for episode in range(NUM_EPISODES):
+    q_table = np.zeros(NUM_BUCKETS + (NUM_ACTIONS,), dtype=float)
 
-        # Reset the environment
+    simulate(env, NUM_EPISODES, q_table, STATE_BOUNDS, NUM_BUCKETS)
+    
+    return env
+
+
+
+def simulate(env, num_episodes, q_table, state_bounds, num_buckets):
+    MIN_EXPLORE_RATE = 0.001
+    MIN_LEARNING_RATE = 0.2
+    DECAY_FACTOR = np.prod(num_buckets, dtype=float) / 10.0
+
+
+    for episode in range(num_episodes):
+        learning_rate = get_learning_rate(episode, DECAY_FACTOR, MIN_LEARNING_RATE)
+        explore_rate = get_explore_rate(episode, DECAY_FACTOR, MIN_EXPLORE_RATE)
+
         obv = env.reset()
-
-        # the initial state
-        state_0 = state_to_bucket(obv)
+        state_0 = state_to_bucket(obv, state_bounds, num_buckets)
         total_reward = 0
 
         for t in range(MAX_T):
-
-            # Select an action
-            action = select_action(state_0, explore_rate)
-
-            # execute the action
+            action = select_action(state_0, explore_rate, q_table)
             obv, reward, done, _ = env.step(action)
+            state = state_to_bucket(obv, state_bounds, num_buckets)
 
-            # Observe the result
-            state = state_to_bucket(obv)
+            best_q = np.amax(q_table[state])
+            q_table[state_0 + (action,)] += learning_rate * (reward + discount_factor * best_q - q_table[state_0 + (action,)])
+
+            state_0 = state
             total_reward += reward
 
-            # Update the Q based on the result
-            best_q = np.amax(q_table[state])
-            q_table[state_0 + (action,)] += learning_rate * (reward + discount_factor * (best_q) - q_table[state_0 + (action,)])
-
-            # Setting up for the next iteration
-            state_0 = state
-
-            # Print data
-            if DEBUG_MODE == 2:
-                print("\nEpisode = %d" % episode)
-                print("t = %d" % t)
-                print("Action: %d" % action)
-                print("State: %s" % str(state))
-                print("Reward: %f" % reward)
-                print("Best Q: %f" % best_q)
-                print("Explore rate: %f" % explore_rate)
-                print("Learning rate: %f" % learning_rate)
-                print("Streaks: %d" % num_streaks)
-                print("")
-
-            elif DEBUG_MODE == 1:
-                if done or t >= MAX_T - 1:
-                    print("\nEpisode = %d" % episode)
-                    print("t = %d" % t)
-                    print("Explore rate: %f" % explore_rate)
-                    print("Learning rate: %f" % learning_rate)
-                    print("Streaks: %d" % num_streaks)
-                    print("Total reward: %f" % total_reward)
-                    print("")
-
-            # Render tha maze
-            if RENDER_MAZE:
-                env.render()
-
-            if env.is_game_over():
-                sys.exit()
-
-            if done:
-                print("Episode %d finished after %f time steps with total reward = %f (streak %d)."
-                      % (episode, t, total_reward, num_streaks))
-
-                if t <= SOLVED_T:
-                    num_streaks += 1
-                else:
-                    num_streaks = 0
+            if done or env.is_game_over():
                 break
-
-            elif t >= MAX_T - 1:
-                print("Episode %d timed out at %d with total reward = %f."
-                      % (episode, t, total_reward))
-
-        # It's considered done when it's solved over 120 times consecutively
-        if num_streaks > STREAK_TO_END:
-            break
-
-        # Update parameters
-        explore_rate = get_explore_rate(episode)
-        learning_rate = get_learning_rate(episode)
-
-
-def select_action(state, explore_rate):
-    # Select a random action
-    if random.random() < explore_rate:
-        action = env.action_space.sample()
-    # Select the action with the highest q
-    else:
-        action = int(np.argmax(q_table[state]))
-    return action
-
-
-def get_explore_rate(t):
-    return max(MIN_EXPLORE_RATE, min(0.8, 1.0 - math.log10((t+1)/DECAY_FACTOR)))
-
-
-def get_learning_rate(t):
-    return max(MIN_LEARNING_RATE, min(0.8, 1.0 - math.log10((t+1)/DECAY_FACTOR)))
-
-
-def state_to_bucket(state):
+            
+            
+def state_to_bucket(state, state_bounds, num_buckets):
     bucket_indice = []
     for i in range(len(state)):
-        if state[i] <= STATE_BOUNDS[i][0]:
-            bucket_index = 0
-        elif state[i] >= STATE_BOUNDS[i][1]:
-            bucket_index = NUM_BUCKETS[i] - 1
-        else:
-            # Mapping the state bounds to the bucket array
-            bound_width = STATE_BOUNDS[i][1] - STATE_BOUNDS[i][0]
-            offset = (NUM_BUCKETS[i]-1)*STATE_BOUNDS[i][0]/bound_width
-            scaling = (NUM_BUCKETS[i]-1)/bound_width
-            bucket_index = int(round(scaling*state[i] - offset))
+        bound_width = state_bounds[i][1] - state_bounds[i][0]
+        offset = (num_buckets[i]-1) * state_bounds[i][0] / bound_width
+        scaling = (num_buckets[i]-1) / bound_width
+        bucket_index = int(round(scaling * state[i] - offset))
         bucket_indice.append(bucket_index)
     return tuple(bucket_indice)
 
 
+def get_explore_rate(t, decay_factor, min_explore_rate):
+    return max(min_explore_rate, min(0.8, 1.0 - math.log10((t + 1) / decay_factor)))
+
+def get_learning_rate(t, decay_factor, min_learning_rate):
+    return max(min_learning_rate, min(0.8, 1.0 - math.log10((t + 1) / decay_factor)))
+
+def select_action(state, explore_rate, q_table):
+    if random.random() < explore_rate:
+        return env.action_space.sample()
+    else:
+        return int(np.argmax(q_table[state]))
+
+
 if __name__ == "__main__":
-
-    # Initialize the "maze" environment
-    # env = gymnasium.make("maze-random-10x10-plus-v0")
-    
-    env = gymnasium.make("random-forest-map-plus-10x10-v0")
-
-    '''
-    Defining the environment related constants
-    '''
-    # Number of discrete states (bucket) per state dimension
-    MAZE_SIZE = tuple((env.observation_space.high + np.ones(env.observation_space.shape)).astype(int))
-    NUM_BUCKETS = MAZE_SIZE  # one bucket per grid
-
-    # Number of discrete actions
-    NUM_ACTIONS = env.action_space.n  # ["N", "S", "E", "W"]
-    # Bounds for each discrete state
-    STATE_BOUNDS = list(zip(env.observation_space.low, env.observation_space.high))
-
-    '''
-    Learning related constants
-    '''
-    MIN_EXPLORE_RATE = 0.001
-    MIN_LEARNING_RATE = 0.2
-    DECAY_FACTOR = np.prod(MAZE_SIZE, dtype=float) / 10.0
-
-    '''
-    Defining the simulation related constants
-    '''
-    NUM_EPISODES = 50000
-    MAX_T = np.prod(MAZE_SIZE, dtype=int) * 100
-    STREAK_TO_END = 100
-    SOLVED_T = np.prod(MAZE_SIZE, dtype=int)
-    DEBUG_MODE = 0
-    RENDER_MAZE = True
     ENABLE_RECORDING = True
+    NUM_EPISODES = 5  #50000
+    MAX_T = 1000
+    env = None
+    try:
+        env = main(ENABLE_RECORDING)
 
-    '''
-    Creating a Q-Table for each state-action pair
-    '''
-    q_table = np.zeros(NUM_BUCKETS + (NUM_ACTIONS,), dtype=float)
+    finally:
+        if env is not None:
+            env.close()
+    # main()
+    
+# def simulate():
 
-    '''
-    Begin simulation
-    '''
-    recording_folder = "/tmp/maze_q_learning"
+#     # Instantiating the learning related parameters
+#     learning_rate = get_learning_rate(0)
+#     explore_rate = get_explore_rate(0)
+#     discount_factor = 0.99
 
-    if ENABLE_RECORDING:
-        env.monitor.start(recording_folder, force=True)
+#     num_streaks = 0
 
-    simulate()
+#     # Render tha maze
+#     env.render()
 
-    if ENABLE_RECORDING:
-        env.monitor.close()
+#     for episode in range(NUM_EPISODES):
+
+#         # Reset the environment
+#         obv = env.reset()
+
+#         # the initial state
+#         state_0 = state_to_bucket(obv)
+#         total_reward = 0
+
+#         for t in range(MAX_T):
+
+#             # Select an action
+#             action = select_action(state_0, explore_rate)
+
+#             # execute the action
+#             obv, reward, done, _ = env.step(action)
+
+#             # Observe the result
+#             state = state_to_bucket(obv)
+#             total_reward += reward
+
+#             # Update the Q based on the result
+#             best_q = np.amax(q_table[state])
+#             q_table[state_0 + (action,)] += learning_rate * (reward + discount_factor * (best_q) - q_table[state_0 + (action,)])
+
+#             # Setting up for the next iteration
+#             state_0 = state
+
+#             # Print data
+#             if DEBUG_MODE == 2:
+#                 print("\nEpisode = %d" % episode)
+#                 print("t = %d" % t)
+#                 print("Action: %d" % action)
+#                 print("State: %s" % str(state))
+#                 print("Reward: %f" % reward)
+#                 print("Best Q: %f" % best_q)
+#                 print("Explore rate: %f" % explore_rate)
+#                 print("Learning rate: %f" % learning_rate)
+#                 print("Streaks: %d" % num_streaks)
+#                 print("")
+
+#             elif DEBUG_MODE == 1:
+#                 if done or t >= MAX_T - 1:
+#                     print("\nEpisode = %d" % episode)
+#                     print("t = %d" % t)
+#                     print("Explore rate: %f" % explore_rate)
+#                     print("Learning rate: %f" % learning_rate)
+#                     print("Streaks: %d" % num_streaks)
+#                     print("Total reward: %f" % total_reward)
+#                     print("")
+
+#             # Render tha maze
+#             if RENDER_MAZE:
+#                 env.render()
+
+#             if env.is_game_over():
+#                 sys.exit()
+
+#             if done:
+#                 print("Episode %d finished after %f time steps with total reward = %f (streak %d)."
+#                       % (episode, t, total_reward, num_streaks))
+
+#                 if t <= SOLVED_T:
+#                     num_streaks += 1
+#                 else:
+#                     num_streaks = 0
+#                 break
+
+#             elif t >= MAX_T - 1:
+#                 print("Episode %d timed out at %d with total reward = %f."
+#                       % (episode, t, total_reward))
+
+#         # It's considered done when it's solved over 120 times consecutively
+#         if num_streaks > STREAK_TO_END:
+#             break
+
+#         # Update parameters
+#         explore_rate = get_explore_rate(episode)
+#         learning_rate = get_learning_rate(episode)
+
+
+# def select_action(state, explore_rate):
+#     # Select a random action
+#     if random.random() < explore_rate:
+#         action = env.action_space.sample()
+#     # Select the action with the highest q
+#     else:
+#         action = int(np.argmax(q_table[state]))
+#     return action
+
+
+# def get_explore_rate(t):
+#     return max(MIN_EXPLORE_RATE, min(0.8, 1.0 - math.log10((t+1)/DECAY_FACTOR)))
+
+
+# def get_learning_rate(t):
+#     return max(MIN_LEARNING_RATE, min(0.8, 1.0 - math.log10((t+1)/DECAY_FACTOR)))
+
+
+# def state_to_bucket(state):
+#     bucket_indice = []
+#     for i in range(len(state)):
+#         if state[i] <= STATE_BOUNDS[i][0]:
+#             bucket_index = 0
+#         elif state[i] >= STATE_BOUNDS[i][1]:
+#             bucket_index = NUM_BUCKETS[i] - 1
+#         else:
+#             # Mapping the state bounds to the bucket array
+#             bound_width = STATE_BOUNDS[i][1] - STATE_BOUNDS[i][0]
+#             offset = (NUM_BUCKETS[i]-1)*STATE_BOUNDS[i][0]/bound_width
+#             scaling = (NUM_BUCKETS[i]-1)/bound_width
+#             bucket_index = int(round(scaling*state[i] - offset))
+#         bucket_indice.append(bucket_index)
+#     return tuple(bucket_indice)
+
+
+# if __name__ == "__main__":
+
+#     #initialize env
+#     env = gymnasium.make("maze-random-10x10-plus-v0")
+    
+#     #recordings
+#     recording_folder = "./game_recordings"
+#     if ENABLE_RECORDING:
+#         # env.monitor.start(recording_folder, force=True)
+#         env = RecordVideo(env, video_folder=recording_folder, episode_trigger=capped_cubic_video_schedule)
+    
+
+#     '''
+#     Defining the environment related constants
+#     '''
+#     # Number of discrete states (bucket) per state dimension
+#     MAZE_SIZE = tuple((env.observation_space.high + np.ones(env.observation_space.shape)).astype(int))
+#     NUM_BUCKETS = MAZE_SIZE  # one bucket per grid
+
+#     # Number of discrete actions
+#     NUM_ACTIONS = env.action_space.n  # ["N", "S", "E", "W"]
+#     # Bounds for each discrete state
+#     STATE_BOUNDS = list(zip(env.observation_space.low, env.observation_space.high))
+
+   
+#     #Learning related constants
+ 
+#     MIN_EXPLORE_RATE = 0.001
+#     MIN_LEARNING_RATE = 0.2
+#     DECAY_FACTOR = np.prod(MAZE_SIZE, dtype=float) / 10.0
+
+
+#     #Simulation related constants
+
+#     NUM_EPISODES = 50000
+#     MAX_T = np.prod(MAZE_SIZE, dtype=int) * 100
+#     STREAK_TO_END = 100
+#     SOLVED_T = np.prod(MAZE_SIZE, dtype=int)
+#     DEBUG_MODE = 0
+#     RENDER_MAZE = True
+#     # ENABLE_RECORDING = True
+
+    
+#     #q table for each state-action pair
+#     q_table = np.zeros(NUM_BUCKETS + (NUM_ACTIONS,), dtype=float)
+
+  
+#     #simulation
+
+
+    # simulate()
+
+    # if ENABLE_RECORDING:
+    #     env.monitor.close()

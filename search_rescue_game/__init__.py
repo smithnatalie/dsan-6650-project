@@ -22,6 +22,9 @@ register(
     entry_point='search_rescue_game.envs:RandomForestMap10x10Plus',
     max_episode_steps=1000000,
     nondeterministic=True,
+    kwargs={'enable_render': True, 'render_mode': 'rgb_array'}
+    #ADDED
+    
 )
 
 
