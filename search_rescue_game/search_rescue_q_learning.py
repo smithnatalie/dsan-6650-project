@@ -13,6 +13,8 @@ import sys
 from gymnasium.wrappers import RecordVideo
 from gymnasium.wrappers import RecordEpisodeStatistics
 
+import matplotlib.pyplot as plt
+
 
 sys.path.append('/Users/smithnatalie/Desktop/dsan-6650-project')
 
@@ -51,22 +53,18 @@ if __name__ == "__main__":
     # https://gymnasium.farama.org/main/api/wrappers/misc_wrappers/#gymnasium.wrappers.RecordVideo
     
     #recording every 10th episode -  used ChatGPT to help me do this
-    # if recording_enabled:    
-    #     print("Render modes from environment metadata:", env.metadata.get('render_modes'))       
-    #     env = RecordVideo(env, video_folder='./game_recordings', episode_trigger=lambda x: x % 10 == 0, name_prefix="video")
-    #     env = RecordEpisodeStatistics(env)
     
     print("Render mode of the environment before RecordVideo:", env.metadata.get('render_modes'))
 
     if recording_enabled:    
-        env = RecordVideo(env, video_folder='./game_recordings', episode_trigger=lambda x: x % 100 == 0, name_prefix="video")
+        env = RecordVideo(env, video_folder='./game_recordings', episode_trigger=lambda x: x % 10 == 0, name_prefix="video")
 
     map_size: Tuple[int,int] = tuple((env.observation_space.high + np.ones(env.observation_space.shape)).astype(int))
 
     #parameters: will change based on needs
     
     #training
-    num_episodes: int = 100
+    num_episodes: int = 50
     num_episode_steps: int = np.prod(map_size, dtype=int) * 100
     num_actions: int = env.action_space.n
     
@@ -78,10 +76,14 @@ if __name__ == "__main__":
     
     
     #Q values
-    Q: np.ndarray = np.zeros(map_size + (num_actions,), dtype=float)
+    # Q: np.ndarray = np.zeros(map_size + (num_actions,), dtype=float)
+    Q = np.zeros(map_size + (num_actions,), dtype=float)
+    
+    rewards = []
     
     for episode in range(num_episodes):
-        total_reward: int = 0
+        #total_reward: int = 0
+        total_reward = 0
         #reset
         #debugging
         # observation = env.reset()
@@ -99,14 +101,27 @@ if __name__ == "__main__":
         # how the dog agent will select the action to take next
         
         for episode_step in range(num_episode_steps):
-            #random action based on exploration rate
-            if random.uniform(0,1) < exploration_rate:
-                # action: int = env.action_space.sample()
-                action = int(env.action_space.sample())
-            else:
-                #otherwise, take a past action that was determined to yield best results (argmax)
-                # action: int = int(np.argmax(Q[current_state]))
-                action = int(np.argmax(Q[current_state]))
+            action = int(env.action_space.sample()) if random.uniform(0,1) < exploration_rate else int(np.argmax(Q[current_state]))
+            observation, reward, terminated, truncated, _  = env.step(action)
+            total_reward += reward
+            next_state = tuple(observation)
+            TD = reward + discount_factor * np.amax(Q[next_state]) - Q[current_state + (action,)]
+            Q[current_state + (action,)] += learning_rate * TD
+            current_state = next_state
+            
+            if terminated:
+                print(f"Episode {episode + 1}/{num_episodes} complete after {episode_step + 1} steps. Total reward = {total_reward}.")
+                break
+            elif episode_step >= num_episode_steps - 1:
+                print(f"Episode {episode + 1}/{num_episodes} timed out after {episode_step + 1} steps. Total reward = {total_reward}.")
+            # #random action based on exploration rate
+            # if random.uniform(0,1) < exploration_rate:
+            #     # action: int = env.action_space.sample()
+            #     action = int(env.action_space.sample())
+            # else:
+            #     #otherwise, take a past action that was determined to yield best results (argmax)
+            #     # action: int = int(np.argmax(Q[current_state]))
+            #     action = int(np.argmax(Q[current_state]))
                 
                 
             #DEBUGGING
@@ -117,42 +132,51 @@ if __name__ == "__main__":
             #should require 5 inputs
             
             #debugging
-            print(f"Attempting to execute action: {action}, Type: {type(action)}")
+            # print(f"Action: {action}, Type: {type(action)}")
 
             
-            observation, reward, terminated, truncated, _ = env.step(action)
+            # observation, reward, terminated, truncated, _ = env.step(action)
             
-            total_reward += reward
+            # total_reward += reward
             
-            #go to next state
-            next_state = tuple(observation)
+            # #go to next state
+            # next_state = tuple(observation)
             
-            #temporal difference error
-            # (reward+discountfactorgamma(Q[next_state]))−Q[current_state,action]
+            # #temporal difference error
+            # # (reward+discountfactorgamma(Q[next_state]))−Q[current_state,action]
             
-            TD: float = reward + discount_factor * np.amax(Q[next_state]) - Q[current_state + (action,)]
+            # TD: float = reward + discount_factor * np.amax(Q[next_state]) - Q[current_state + (action,)]
 
-            #bellman equation
-            Q[current_state + (action,)] +- learning_rate * TD
-            current_state = next_state
+            # #bellman equation
+            # Q[current_state + (action,)] +- learning_rate * TD
+            # current_state = next_state
             
-            #render again after env moves into next state
-            # env.render(mode="human")
+            # #render again after env moves into next state
+            # # env.render(mode="human")
             
-            #end of game - reaches goal - terminated = true
-            if terminated:
-                print("Episode %d/%d complete after %d steps. Total reward = %f." % (episode + 1, num_episodes, episode_step + 1, total_reward))
-                break
-            #if reach max steps without goal
-            elif episode_step >= num_episode_steps - 1:
-                print("Episode %d/%d timed out after %d steps. Total reward = %f."
-                      % (episode + 1, num_episodes, episode_step + 1, total_reward))
+            # #end of game - reaches goal - terminated = true
+            # if terminated:
+            #     print("Episode %d/%d complete after %d steps. Total reward = %f." % (episode + 1, num_episodes, episode_step + 1, total_reward))
+            #     break
+            # #if reach max steps without goal
+            # elif episode_step >= num_episode_steps - 1:
+            #     print("Episode %d/%d timed out after %d steps. Total reward = %f."
+            #           % (episode + 1, num_episodes, episode_step + 1, total_reward))
                 
         
         #updating parameters
+        rewards.append(total_reward)
         exploration_rate = calc_exploration_rate(episode)
         learning_rate = calc_learning_rate(episode)
         
     env.close()
                 
+                
+#plotting results
+
+plt.plot(rewards)
+plt.title('Total Rewards per Episode')
+plt.xlabel('Episode')
+plt.ylabel('Total Reward')
+plt.show()
 #~>~>~>~>~>~>~>>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~>~
