@@ -176,8 +176,8 @@ class ForestViews:
         #drawing all of the game element we just defined
         self.__draw_map()
         self.__beginning_color()
-        self.__goal_color()
         self.__dog_color()
+        
         
         #cover icons fog
         for x in range(self.map_width):
@@ -187,6 +187,11 @@ class ForestViews:
                     dy = y * self.cell_height
                     self.__screen.blit(self.__cover_icon, (dx,dy))
         
+        
+        
+        self.__goal_color()
+        
+        self.__screen.blit(self.__game_surface, (0,0))
         
         if mode == "human":
             pygame.display.flip()
