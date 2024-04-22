@@ -57,6 +57,19 @@ class ForestViews:
         self.__goal_icon = pygame.image.load('./search_rescue_game/envs/images/baby.png')
         self.__goal_icon = pygame.transform.scale(self.__goal_icon, (self.__cell_width, self.__cell_height))
         
+        
+        #cover - fog of war forest icon
+        self.__cover_icon = pygame.image.load('./search_rescue_game/envs/images/tree.png')
+        self.__cover_icon = pygame.transform.scale(self.__cover_icon, (self.__cell_width, self.__cell_height))
+        
+        #####
+        
+        #initializing "fog" state
+        self.__coverage = np.full((self.map_width, self.map_height), True)
+        
+        #leave beginning cell uncovered
+        self.__coverage[self.beginning[0], self.beginning[1]] = False
+        
         #drawing the objects so they show up - will define below
         self.__draw_map()
         self.__beginning_color()
@@ -176,6 +189,15 @@ class ForestViews:
         self.__goal_color()
         self.__dog_color()
         
+        #cover icons fog
+        for x in range(self.map_width):
+            for y in range(self.map_height):
+                if self.__coverage[x,y]:
+                    dx = x * self.cell_width
+                    dy = y * self.cell_height
+                    self.__screen.blit(self.__cover_icon, (dx,dy))
+        
+        
         if mode == "human":
             pygame.display.flip()
         
@@ -196,6 +218,10 @@ class ForestViews:
             
             #move
             self.__dog = self.dog + Maps.compass[direction]
+            
+            #uncover cell when dog moves
+            
+            self.__coverage[self.dog[0], self.dog[1]] == False
 
         self.__dog_color()
         
