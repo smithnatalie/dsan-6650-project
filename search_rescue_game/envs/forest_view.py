@@ -222,19 +222,46 @@ class ForestViews:
         
     
     #this is how dog willl be placed back at starting space and game restarted
+    
+    #testing reset game w reinstantiation of full coverage tree map
     def reset_game(self):
-        x0 = self.dog[0] * self.cell_width
-        y0 = self.dog[1] * self.cell_height
-        self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
+        self.__dog = np.copy(self.__beginning)
+        #reset "fog"
+        self.__coverage = np.full((self.map_width, self.map_height), True)
+        #reveal starting position on map
+        self.__coverage[self.__beginning[0], self.__beginning[1]] = False
         
+        self.__game_surface.fill(self.BACKGROUND_COLOR)
         
-        # self.__dog_color(transparency=0) #make invisible
-        #back to starting position
-        self.__dog = np.zeros(2, dtype=int)
-        self.__dog_color()
+        self.__draw_map()
+        self.__beginning_color
         self.__goal_color()
+        self.__dog_color()
+        
+        for x in range(self.map_width):
+            for y in range(self.map_height):
+                if self.__coverage[x, y]:
+                    dx = x * self.cell_width
+                    dy = y * self.cell_height
+                    self.__game_surface.blit(self.__cover_icon, (dx, dy))
+        
+        self.render()
+
+    
+    # def reset_game(self):
+    #     x0 = self.dog[0] * self.cell_width
+    #     y0 = self.dog[1] * self.cell_height
+    #     self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
+        
+        
+    #     # self.__dog_color(transparency=0) #make invisible
+    #     #back to starting position
+    #     self.__dog = np.zeros(2, dtype=int)
+    #     self.__dog_color()
+    #     self.__goal_color()
         
     
+    #decorators 
     @property
     def screen_width(self) -> int:
         return self.__screen_width
