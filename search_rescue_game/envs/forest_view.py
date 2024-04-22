@@ -157,17 +157,7 @@ class ForestViews:
         y0 = self.dog[1] * self.cell_height + (self.cell_height - self.__dog_icon.get_height()) // 2
 
         self.__game_surface.blit(self.__dog_icon, (x0, y0))
-        
-    #def __dog_color(self, color: Tuple[int,int,int] = (0,0,0), transparency: int = 255):
-        # x0: int = self.dog[0] * self.cell_width + self.cell_width // 2
-        # y0: int = self.dog[1] * self.cell_height + self.cell_height // 2
-        # r0: int = min(self.cell_width, self.cell_height) // 5
 
-        # self.__game_surface.blit(self.__dog_icon, (x0,y0))
-
-        #this is the line that will change to include icon instead (most likely)
-        #pygame.draw.circle(self.__game_surface, color + (transparency,), (x0, y0), r0)
- 
     
 # decorators, processes, rendering
 
@@ -221,7 +211,7 @@ class ForestViews:
             
             #uncover cell when dog moves
             
-            self.__coverage[self.dog[0], self.dog[1]] == False
+            self.__coverage[self.dog[0], self.dog[1]] = False
 
         self.__dog_color()
         
