@@ -62,6 +62,15 @@ class ForestViews:
         self.__cover_icon = pygame.image.load('./search_rescue_game/envs/images/tree.png')
         self.__cover_icon = pygame.transform.scale(self.__cover_icon, (self.__cell_width, self.__cell_height))
         
+        #dirt path icon
+        self.__beginning_icon = pygame.image.load('./search_rescue_game/envs/images/dirt.png')
+        self.__beginning_icon = pygame.transform.scale(self.__beginning_icon, (self.cell_width, self.cell_height))
+
+        self.__path_icon = pygame.image.load('./search_rescue_game/envs/images/dirt.png')
+        self.__path_icon = pygame.transform.scale(self.__path_icon, (self.cell_width, self.cell_height))
+        
+        
+        
         #####
         
         #initializing "fog" state
@@ -182,10 +191,11 @@ class ForestViews:
         #cover icons fog
         for x in range(self.map_width):
             for y in range(self.map_height):
-                if self.__coverage[x,y]:
-                    dx = x * self.cell_width
-                    dy = y * self.cell_height
-                    self.__screen.blit(self.__cover_icon, (dx,dy))
+                self.__redraw_cell(x,y)
+                # if self.__coverage[x,y]:
+                #     dx = x * self.cell_width
+                #     dy = y * self.cell_height
+                #     self.__screen.blit(self.__cover_icon, (dx,dy))
         
         
         
@@ -203,20 +213,34 @@ class ForestViews:
     #movement of our dog agent
     def move_dog(self, direction: str):
         current_cell: Cell = self.__map.cells[self.dog[0]][self.dog[1]]
-
+        
         if not current_cell.walls[direction]:
-            #self.__dog_color(transparency=0)
-            #fixing dog icon trail - want to disappear once moved
-            x0 = self.dog[0] * self.cell_width
-            y0 = self.dog[1] * self.cell_height
-            self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
+            old_x, old_y = self.__dog[0], self.__dog[1]
+
+            self.__dog += Maps.compass[direction]
             
-            #move
-            self.__dog = self.dog + Maps.compass[direction]
+            self.__redraw_cell(old_x, old_y)
+
+            self.__coverage[self.__dog[0], self.__dog[1]] = False
             
-            #uncover cell when dog moves
+            self.__redraw_cell(self.__dog[0], self.__dog[1])
+        
+        
+
+        # if not current_cell.walls[direction]:
+        #     #self.__dog_color(transparency=0)
+        #     #fixing dog icon trail - want to disappear once moved
+        #     x0 = self.dog[0] * self.cell_width
+        #     y0 = self.dog[1] * self.cell_height
+        #     self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
             
-            self.__coverage[self.dog[0], self.dog[1]] = False
+        #     #move
+        #     self.__dog = self.dog + Maps.compass[direction]
+
+        #     #uncover cell when dog moves
+            
+        #     self.__coverage[self.dog[0], self.dog[1]] = False
+
 
         self.__dog_color()
         
@@ -246,20 +270,28 @@ class ForestViews:
                     self.__game_surface.blit(self.__cover_icon, (dx, dy))
         
         self.render()
-
+        
+        
+        
+    def __redraw_cell(self, x:int, y:int):
+        top_left_x = x * self.cell_width
+        top_left_y = y * self.cell_height
+        
+        if not self.__coverage[x,y]:
+            self.__game_surface.blit(self.__path_icon, (top_left_x, top_left_y))
+        else:
+            self.__game_surface.blit(self.__cover_icon, (top_left_x, top_left_y))
+            
+            
+        if (x, y) == (self.__beginning[0], self.__beginning[1]):
+            self.__game_surface.blit(self.__beginning_icon, (top_left_x, top_left_y))
+        elif (x, y) == (self.__goal[0], self.__goal[1]):
+            self.__game_surface.blit(self.__goal_icon, (top_left_x, top_left_y))
+            
+        #draw dog if in cell
+        if (x,y) == (self.__dog[0], self.__dog[1]):
+            self.__dog_color()
     
-    # def reset_game(self):
-    #     x0 = self.dog[0] * self.cell_width
-    #     y0 = self.dog[1] * self.cell_height
-    #     self.__game_surface.fill(self.BACKGROUND_COLOR, (x0, y0, self.cell_width, self.cell_height))
-        
-        
-    #     # self.__dog_color(transparency=0) #make invisible
-    #     #back to starting position
-    #     self.__dog = np.zeros(2, dtype=int)
-    #     self.__dog_color()
-    #     self.__goal_color()
-        
     
     #decorators 
     @property
