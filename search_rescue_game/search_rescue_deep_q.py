@@ -5,6 +5,7 @@ import random
 import gymnasium
 from . import envs
 import numpy as np
+import matplotlib.pyplot as plt
 
 #initializing the deep q neural network class
 class Q_NeuralNet(nn.Module):
@@ -110,6 +111,8 @@ if __name__ == "__main__":
     agent = Q_Agent(dim_state=env.observation_space.shape[0], dim_action=env.action_space.n, learning_rate=0.001, 
                     batch_size=32)
 
+    #so i can track and plot
+    total_rewards = []
     
     
     for episode in range(total_episodes):
@@ -128,8 +131,20 @@ if __name__ == "__main__":
             
             state = next_state
             total_reward += reward
+        
+        total_rewards.append(total_reward)
             
         print(f"Episode: {episode}, Total reward: {total_reward}")
     
     
     env.close()
+    
+##++_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_++_+_+___
+
+#plotting
+
+plt.plot(total_rewards)
+plt.title('Total Rewards per Episode')
+plt.xlabel('Episode')
+plt.ylabel('Total Reward')
+plt.show()
