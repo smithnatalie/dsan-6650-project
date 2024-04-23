@@ -103,7 +103,8 @@ class Q_Agent:
 
 ##++_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_++_+_+___
 
-total_episodes = 50       
+total_episodes = 500
+# total_episodes = 50       
 
 if __name__ == "__main__":
     
@@ -133,7 +134,8 @@ if __name__ == "__main__":
             total_reward += reward
         
         total_rewards.append(total_reward)
-            
+        
+        #commenting out to speed up run
         print(f"Episode: {episode}, Total reward: {total_reward}")
     
     
@@ -143,8 +145,12 @@ if __name__ == "__main__":
 
 #plotting
 
-plt.plot(total_rewards)
-plt.title('Total Rewards per Episode')
-plt.xlabel('Episode')
-plt.ylabel('Total Reward')
-plt.show()
+# plt.plot(total_rewards)
+# plt.title('Total Rewards per Episode')
+# plt.xlabel('Episode')
+# plt.ylabel('Total Reward')
+# plt.show()
+
+import json
+with open('deep_q_rewards.json', 'w') as f:
+    json.dump(total_rewards, f)

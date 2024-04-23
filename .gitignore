@@ -4,3 +4,5 @@ envs.egg-info
 build
 dist
 *.pyc
+**/game_recordings
+__pycache**
