@@ -63,8 +63,8 @@ if __name__ == "__main__":
     #training
     
     #change number of episodes to capture diff metrics
-    num_episodes: int = 50
-    # num_episodes: int = 500
+    # num_episodes: int = 50
+    num_episodes: int = 500
     
     
     num_episode_steps: int = np.prod(map_size, dtype=int) * 100

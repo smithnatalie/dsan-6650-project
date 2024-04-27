@@ -103,8 +103,8 @@ class Q_Agent:
 
 ##++_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_++_+_+___
 
-# total_episodes = 500
-total_episodes = 50       
+total_episodes = 500
+# total_episodes = 50       
 
 if __name__ == "__main__":
     

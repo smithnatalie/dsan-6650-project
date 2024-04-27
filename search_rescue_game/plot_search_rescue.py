@@ -15,8 +15,8 @@ def plot_rewards(tabular_rewards, deep_rewards):
     plt.xlabel("Episode")
     plt.ylabel("Total Rewards")
     plt.title("Reward Comparison: Tabular vs Deep Q-Learning")
-    plt.legend()
-    plt.tight_layout()
+    plt.legend(loc='upper right', bbox_to_anchor = (1.35, 1), borderaxespad=0.)
+    plt.tight_layout(rect=[0, 0, 0.9, 1])
     plt.savefig('comparison_rewards.png')
     plt.show()
 
@@ -27,8 +27,8 @@ def plot_steps(tabular_steps, deep_steps):
     plt.xlabel("Episode")
     plt.ylabel("Steps per Episode")
     plt.title("Step Comparison: Tabular vs Deep Q-Learning")
-    plt.legend()
-    plt.tight_layout()
+    plt.legend(loc='upper right', bbox_to_anchor = (1.35, 1), borderaxespad=0.)
+    plt.tight_layout(rect=[0, 0, 0.9, 1])
     plt.savefig('comparison_steps.png') 
     plt.show()
 
