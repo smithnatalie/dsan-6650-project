@@ -103,8 +103,8 @@ class Q_Agent:
 
 ##++_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_++_+_+___
 
-total_episodes = 500
-# total_episodes = 50       
+# total_episodes = 500
+total_episodes = 50       
 
 if __name__ == "__main__":
     
@@ -114,12 +114,14 @@ if __name__ == "__main__":
 
     #so i can track and plot
     total_rewards = []
+    steps_per_episode = []
     
     
     for episode in range(total_episodes):
         state = env.reset()
         total_reward = 0
         done = False
+        steps = 0
         
         while not done:
             action = agent.play_game(state, epsilon=0.1)
@@ -132,11 +134,13 @@ if __name__ == "__main__":
             
             state = next_state
             total_reward += reward
+            steps += 1 #incrementing
         
         total_rewards.append(total_reward)
+        steps_per_episode.append(steps)
         
         #commenting out to speed up run
-        print(f"Episode: {episode}, Total reward: {total_reward}")
+        print(f"Episode: {episode}, Total reward: {total_reward}, Steps: {steps}")
     
     
     env.close()
@@ -154,3 +158,5 @@ if __name__ == "__main__":
 import json
 with open('deep_q_rewards.json', 'w') as f:
     json.dump(total_rewards, f)
+with open('deep_q_steps.json', 'w') as f:
+    json.dump(steps_per_episode, f)

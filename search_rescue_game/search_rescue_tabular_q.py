@@ -15,6 +15,7 @@ from gymnasium.wrappers import RecordEpisodeStatistics
 
 import matplotlib.pyplot as plt
 
+from search_rescue_game.envs.forest_env import MapEnv
 
 #folder where we defined classes, map rendering, etc. 
 
@@ -34,6 +35,7 @@ if __name__ == "__main__":
     #create environment - this map will change depending on which want to select
     #start with a random generation
     env = gymnasium.make("map-random-10x10-v0", render_mode = "rgb_array")
+    env.seed(101)
     #debugging
     print("Render mode of the environment:", env.metadata.get('render_modes'))
     print("Environment metadata:", env.metadata)
@@ -61,8 +63,8 @@ if __name__ == "__main__":
     #training
     
     #change number of episodes to capture diff metrics
-    # num_episodes: int = 50
-    num_episodes: int = 500
+    num_episodes: int = 50
+    # num_episodes: int = 500
     
     
     num_episode_steps: int = np.prod(map_size, dtype=int) * 100
@@ -80,6 +82,9 @@ if __name__ == "__main__":
     Q = np.zeros(map_size + (num_actions,), dtype=float)
     
     rewards = []
+    
+    #adding episode steps
+    steps_per_episode = []
     
     for episode in range(num_episodes):
         total_reward = 0
@@ -112,11 +117,12 @@ if __name__ == "__main__":
             #end of game - reaches goal - terminated = true
             if terminated:
                 print(f"Episode {episode + 1}/{num_episodes} complete after {episode_step + 1} steps. Total reward = {total_reward}.")
+                steps_per_episode.append(episode_step + 1) #record steps
                 break
             #if reach max steps without goal
             elif episode_step >= num_episode_steps - 1:
                 print(f"Episode {episode + 1}/{num_episodes} timed out after {episode_step + 1} steps. Total reward = {total_reward}.")
-                
+                steps_per_episode.append(episode_step + 1)
         
         #updating parameters
         rewards.append(total_reward)
@@ -138,5 +144,6 @@ if __name__ == "__main__":
 import json
 with open('tabular_q_rewards.json', 'w') as f:
     json.dump(rewards, f)
-
+with open('tabular_q_steps.json', 'w') as f:
+    json.dump(steps_per_episode, f)
 

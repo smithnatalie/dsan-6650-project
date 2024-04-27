@@ -4,6 +4,7 @@ import gymnasium
 from gymnasium import spaces
 from .forest_view import ForestViews
 from typing import List, Tuple, Dict
+import random
 
 
 ######TESTING###############################################
@@ -41,6 +42,12 @@ class MapEnv(gymnasium.Env):
         high: np.ndarray = np.array(self.map_size, dtype=int) - np.ones(len(self.map_size), dtype=int)
         self.observation_space: spaces.Box = spaces.Box(low, high, dtype=np.int64)
     
+    
+    def seed(self, seed=None):
+        np.random.seed(seed)
+        random.seed(seed)
+        return [seed]
+
     #Was having a lot of issues with my previous step function
     # suggestion to generalize from a couple sources:
     # https://stackoverflow.com/questions/10016352/convert-numpy-array-to-tuple
