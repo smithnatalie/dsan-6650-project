@@ -8,4 +8,4 @@
 
 Remaining project information is included in the Final Project Write Up submitted on Canvas. 
 
-![image](https://github.com/smithnatalie/dsan-6650-project/assets/110950384/c4cc4765-937f-4b10-88ab-799d3605a865)
+![gif_game](https://github.com/smithnatalie/dsan-6650-project/assets/110950384/6d9bf371-47fa-43b3-9938-b0a35d3b4bb1)
